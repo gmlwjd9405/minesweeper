@@ -1,5 +1,7 @@
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Random;
+import java.util.Collections;
+import java.util.List;
 
 public class Minesweeper {
     private static final int ROW = 10;
@@ -14,7 +16,7 @@ public class Minesweeper {
         Minesweeper minesweeper = new Minesweeper();
         minesweeper.initMap();
         minesweeper.createMine(THE_NUM_OF_MINE);
-        minesweeper.setCntOfMine(); // 각 사각형에 표시될 숫자를 "입력"하는 로직 부분
+        minesweeper.setCntOfMine();
         minesweeper.printMap();
     }
 
@@ -25,57 +27,62 @@ public class Minesweeper {
 
     /* map 초기화 */
     private void initMap() {
-        for (int i = 0; i < ROW; i++)
-            for (int j = 0; j < COL; j++)
+        for (int i = 0; i < ROW; i++) {
+            for (int j = 0; j < COL; j++) {
                 map[i][j] = NONE;
+            }
+        }
     }
 
     /* 지뢰 위치 랜덤 생성 */
-    private void createMine(int mineCnt) {
-        Random random = new Random();
-
-        while (mineCnt-- > 0) {
-            int row = random.nextInt(ROW);
-            int col = random.nextInt(COL);
-
-            if (map[row][col] == MINE) { // 위치 다시 지정
-                ++mineCnt;
-                continue;
-            }
-            map[row][col] = MINE; // 지뢰 추가
+    private void createMine(int mineCount) {
+        List<Integer> randomNumbers = getRandomNumbers(mineCount);
+        for (int i = 0; i < randomNumbers.size(); i++) {
+            int num = randomNumbers.get(i);
+            map[num / COL][num % COL] = MINE; // 지뢰 추가
         }
+    }
+
+    /* 랜덤 숫자 생성 */
+    private List<Integer> getRandomNumbers(int count) {
+        List<Integer> numList = new ArrayList<>();
+        for (int i = 0; i < ROW * COL; i++) {
+            numList.add(i); // index 저장
+        }
+        Collections.shuffle(numList); // 랜덤하게 위치 변경
+        return numList.subList(0, count);
     }
 
     /* 지뢰가 아닌 칸에 지뢰의 갯수 표시 */
     private void setCntOfMine() {
-        for (int i = 0; i < ROW; i++)
-            for (int j = 0; j < COL; j++)
-                if (map[i][j] == NONE)
-                    cntOfMineAroundTheSpace(i, j);
+        for (int i = 0; i < ROW; i++) {
+            for (int j = 0; j < COL; j++) {
+                if (map[i][j] == NONE) cntOfMineAroundTheSpace(i, j);
+            }
+        }
     }
 
     /* 자신을 제외한 주변 8칸에서 지뢰의 갯수 구하기 */
     private void cntOfMineAroundTheSpace(int row, int col) {
-        int[] aroundRow = {row - 1, row - 1, row - 1, row, row, row + 1, row + 1, row + 1};
-        int[] aroundCol = {col - 1, col, col + 1, col - 1, col + 1, col - 1, col, col + 1};
+        // {row, col}
+        int[][] around = {{-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 1}, {1, -1}, {1, 0}, {1, 1}};
 
-        for (int i = 0; i < aroundRow.length; i++)
-            if (isExistMine(aroundRow[i], aroundCol[i]))
+        for (int i = 0; i < around.length; i++) {
+            if (isExistMine(row + around[i][0], col + around[i][1])) {
                 map[row][col]++; // 해당 위치에 표시할 지뢰의 갯수 증가
+            }
+        }
     }
 
     /* 지뢰 존재 여부 확인 */
     private boolean isExistMine(int row, int col) {
-        if (!checkValidation(row, col))
-            return false;
+        if (!checkValidation(row, col)) return false;
         return map[row][col] == MINE;
     }
 
     /* 배열 범위 유효성 체크 (new throw ArrayIndexOutOfBoundsException) */
     private boolean checkValidation(int row, int col) {
-        if (row < 0 || row >= ROW || col < 0 || col >= COL)
-            return false;
-        return true;
+        return !(row < 0 || row >= ROW || col < 0 || col >= COL);
     }
 
     /* Map 출력 */
